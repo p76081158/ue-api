@@ -91,6 +91,9 @@ func main() {
     if (os.Args[2]!="") {
 		Request_pattern = string(os.Args[2])
 	}
+	if (os.Args[3]!="") {
+		Resource_ratio = StringToInt(string(os.Args[3]))
+	}
 
 	start := time.Now()
 	RequestScheduler(Request_pattern)
