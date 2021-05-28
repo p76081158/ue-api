@@ -66,7 +66,7 @@ func RequestPatternGenerator(resource int, duration int) {
 	num_poisson := distuv.Poisson{num_lambda, r}
 	for i := 0; i < timeWindowNum; i++ {
 		request_nums := int(num_poisson.Rand())
-		delay_lambda := float64(1000 / request_nums / TimeWindow)
+		delay_lambda := float64(1000 / (request_nums / TimeWindow))
 		go RequestPoisson(delay_lambda ,request_nums)
 		time.Sleep(time.Duration(TimeWindow) * time.Second)
 	}
