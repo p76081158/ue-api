@@ -67,12 +67,13 @@ func RequestPatternGenerator(resource int, duration int) {
 	r := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	num_poisson := distuv.Poisson{num_lambda, r}
 	fmt.Println("Timewindow length: ", TimeWindow, "s")
+	fmt.Println("Number of timewindows: ", timeWindowNum)
 	fmt.Println("Lambda of request number every timewindow: ", num_lambda)
 	fmt.Println("")
 	for i := 0; i < timeWindowNum; i++ {
 		request_nums := int(num_poisson.Rand())
 		fmt.Println("Timewindow id: ", i+1)
-		fmt.Println("Request numbers: ", request_nums)
+		fmt.Println("Number of requests: ", request_nums)
 		if request_nums == 0 {
 			continue
 		}
@@ -106,6 +107,8 @@ func RequestScheduler(pattern string) {
 	}
 }
 
+// example cmd : ./ue-requests-generator "curl google.com" 500:10,400:15 500
+
 func main() {
 	if (os.Args[1]!="") {
 		Cmd = string(os.Args[1])
@@ -123,6 +126,6 @@ func main() {
 	fmt.Println("")
 	fmt.Println("Duration of execution time: ", time.Since(start))
 	fmt.Println("Delay time between intervals: ", Interval_delay, "s")
-	fmt.Println("Total Requests Sended: ", TotalRequestSend)
+	fmt.Println("Total number of requests sended: ", TotalRequestSend)
 	fmt.Println("Average sending delay between requests: ", float64(TotalDelaySum / TotalRequestSend), "ms")
 }
