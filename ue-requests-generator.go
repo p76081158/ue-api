@@ -12,12 +12,13 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-var Server = "google.com"
+var Cmd = "curl google.com"
 var Request_pattern = "500:50"
 var Interval_delay = 2
 var TimeWindow = 5
 var Resource_ratio = 10
 var TotalRequestSend = 0
+var TotalDelaySum = 0
 
 // convert string to int
 func StringToInt(s string) int {
@@ -32,7 +33,7 @@ func StringToInt(s string) int {
 
 // sending requests to server
 func SendRequest() {
-	input_cmd := "curl " + Server
+	input_cmd := Cmd
 	cmd := exec.Command("/bin/sh", "-c", input_cmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -52,6 +53,7 @@ func RequestPoisson(lambda float64, request_num int) {
 		request_delay := int(p.Rand())
 		go SendRequest()
 		time.Sleep(time.Duration(request_delay) * time.Millisecond)
+		TotalDelaySum += request_delay
 	}
 }
 
@@ -61,32 +63,52 @@ func RequestPoisson(lambda float64, request_num int) {
 //      delay_lambda = 20   (average delay between requests is 20ms)
 func RequestPatternGenerator(resource int, duration int) {
 	timeWindowNum := duration / TimeWindow
-	num_lambda := float64((resource / Resource_ratio) * TimeWindow)
+	num_lambda := float64((float64(resource) / float64(Resource_ratio)) * float64(TimeWindow))
 	r := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	num_poisson := distuv.Poisson{num_lambda, r}
+	fmt.Println("Timewindow length: ", TimeWindow, "s")
+	fmt.Println("Lambda of request number every timewindow: ", num_lambda)
+	fmt.Println("")
 	for i := 0; i < timeWindowNum; i++ {
 		request_nums := int(num_poisson.Rand())
-		delay_lambda := float64(1000 / (request_nums / TimeWindow))
+		fmt.Println("Timewindow id: ", i+1)
+		fmt.Println("Request numbers: ", request_nums)
+		if request_nums == 0 {
+			continue
+		}
+		delay_lambda := float64(1000.0 * float64(TimeWindow) / float64(request_nums))
+		fmt.Println("Lambda of request delay: ", delay_lambda, "ms")
+		fmt.Println("")
 		go RequestPoisson(delay_lambda ,request_nums)
 		time.Sleep(time.Duration(TimeWindow) * time.Second)
+		fmt.Println("")
 	}
 }
 
 // schedule between request interval
 func RequestScheduler(pattern string) {
 	interval := strings.Split(pattern, ",")
+	fmt.Println("Total numbers of Interval: ", len(interval))
+	fmt.Println("")
 	for i := 0; i < len(interval); i++ {
-		temp := strings.Split(pattern, ":")
+		temp := strings.Split(interval[i], ":")
 		resource := StringToInt(temp[0])
 		duration := StringToInt(temp[1])
+		fmt.Println("Interval id: ", i+1)
+		fmt.Println("")
 		go RequestPatternGenerator(resource, duration)
-		time.Sleep(time.Duration(duration + Interval_delay) * time.Second)
+		if i == 0 {
+			time.Sleep(time.Duration(duration) * time.Second)
+		} else {
+			time.Sleep(time.Duration(duration + Interval_delay) * time.Second)
+		}
+		fmt.Println("")
 	}
 }
 
 func main() {
 	if (os.Args[1]!="") {
-		Server = string(os.Args[1])
+		Cmd = string(os.Args[1])
 	}
     if (os.Args[2]!="") {
 		Request_pattern = string(os.Args[2])
@@ -99,6 +121,8 @@ func main() {
 	RequestScheduler(Request_pattern)
 
 	fmt.Println("")
-	fmt.Println("Duration of Sending Requests: ", time.Since(start))
+	fmt.Println("Duration of execution time: ", time.Since(start))
+	fmt.Println("Delay time between intervals: ", Interval_delay, "s")
 	fmt.Println("Total Requests Sended: ", TotalRequestSend)
+	fmt.Println("Average sending delay between requests: ", float64(TotalDelaySum / TotalRequestSend), "ms")
 }
