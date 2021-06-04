@@ -2,15 +2,9 @@ package net
 
 import (
 	"fmt"
-	"time"
 	"net"
+	"log"
 	"os"
-	"os/exec"
-	"strings"
-	"strconv"
-
-	"gonum.org/v1/gonum/stat/distuv"
-	"golang.org/x/exp/rand"
 )
 
 // get all available network interface
@@ -35,8 +29,18 @@ func CheckInterface(interface_name string) {
 	if err != nil {
 		fmt.Println(err, "[" + string(interface_name) +"]")
 		fmt.Println("-----------------------------")
-		availableInterfaces()
+		AvailableInterfaces()
 		os.Exit(0)
 	}
-	fmt.Println(byNameInterface)
+
+	addrs, err := byNameInterface.Addrs()
+	mac := byNameInterface.HardwareAddr.String()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Println("Info of Network Interface: ", interface_name)
+	fmt.Println("IP  Address: ", addrs)
+	fmt.Println("MAC Address: ", mac)
+	fmt.Println("")
 }

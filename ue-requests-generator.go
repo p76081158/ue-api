@@ -10,13 +10,14 @@ import (
 
 	"gonum.org/v1/gonum/stat/distuv"
 	"golang.org/x/exp/rand"
+	"github.com/p76081158/ue-requests-generator/module/net"
 )
 
 var Cmd = "curl google.com"
-var Request_pattern = "500:50"
+var Resource_pattern = "500:50"
 var Interval_delay = 2
 var TimeWindow = 5
-var Resource_ratio = 10
+var Request_ratio = 10
 var TotalRequestSend = 0
 var TotalDelaySum = 0
 
@@ -63,7 +64,7 @@ func RequestPoisson(lambda float64, request_num int) {
 //      delay_lambda = 20   (average delay between requests is 20ms)
 func RequestPatternGenerator(resource int, duration int) {
 	timeWindowNum := duration / TimeWindow
-	num_lambda := float64((float64(resource) / float64(Resource_ratio)) * float64(TimeWindow))
+	num_lambda := float64((float64(resource) / float64(Request_ratio)) * float64(TimeWindow))
 	r := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	num_poisson := distuv.Poisson{num_lambda, r}
 	fmt.Println("Timewindow length: ", TimeWindow, "s")
@@ -107,21 +108,34 @@ func RequestScheduler(pattern string) {
 	}
 }
 
-// example cmd : ./ue-requests-generator "curl google.com" 500:10,400:15 500
+// example cmd :                           ./ue-requests-generator "curl google.com" none 500:10,400:15 500
+// example cmd (select network interface): ./ue-requests-generator "curl google.com" eth3 500:10,400:15 500
 
 func main() {
+	if len(os.Args) != 5 {
+		fmt.Printf("Usage : %s <curl cmd> <specify interface name> <resource pattern> <request ratio>\n", os.Args[0])
+		os.Exit(0)
+	}
 	if (os.Args[1]!="") {
 		Cmd = string(os.Args[1])
 	}
-    if (os.Args[2]!="") {
-		Request_pattern = string(os.Args[2])
+	if (os.Args[2]!="") {
+		if string(os.Args[2]) != "none" {
+			net.CheckInterface(string(os.Args[2]))
+			Cmd += " --interface " + string(os.Args[2])
+			fmt.Println(Cmd)
+			fmt.Println("")
+		}
 	}
-	if (os.Args[3]!="") {
-		Resource_ratio = StringToInt(string(os.Args[3]))
+    if (os.Args[3]!="") {
+		Resource_pattern = string(os.Args[3])
+	}
+	if (os.Args[4]!="") {
+		Request_ratio = StringToInt(string(os.Args[4]))
 	}
 
 	start := time.Now()
-	RequestScheduler(Request_pattern)
+	RequestScheduler(Resource_pattern)
 
 	fmt.Println("")
 	fmt.Println("Duration of execution time: ", time.Since(start))
