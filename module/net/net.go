@@ -34,7 +34,7 @@ func CheckInterface(interface_name string) {
 	}
 
 	addrs, err := byNameInterface.Addrs()
-	mac := byNameInterface.HardwareAddr.String()
+	mac        := byNameInterface.HardwareAddr.String()
 	if err != nil {
 		log.Fatalln(err)
 	}
