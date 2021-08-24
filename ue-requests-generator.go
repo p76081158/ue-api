@@ -35,8 +35,8 @@ func StringToInt(s string) int {
 // sending requests to server
 func SendRequest() {
 	input_cmd := Cmd
-	cmd := exec.Command("/bin/sh", "-c", input_cmd)
-	cmd.Stdin = os.Stdin
+	cmd       := exec.Command("/bin/sh", "-c", input_cmd)
+	cmd.Stdin  = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -64,9 +64,9 @@ func RequestPoisson(lambda float64, request_num int) {
 //      delay_lambda = 20   (average delay between requests is 20ms)
 func RequestPatternGenerator(resource int, duration int) {
 	timeWindowNum := duration / TimeWindow
-	num_lambda := float64((float64(resource) / float64(Request_ratio)) * float64(TimeWindow))
-	r := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-	num_poisson := distuv.Poisson{num_lambda, r}
+	num_lambda    := float64((float64(resource) / float64(Request_ratio)) * float64(TimeWindow))
+	r             := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
+	num_poisson   := distuv.Poisson{num_lambda, r}
 	fmt.Println("Timewindow length: ", TimeWindow, "s")
 	fmt.Println("Number of timewindows: ", timeWindowNum)
 	fmt.Println("Lambda of request number every timewindow: ", num_lambda)
@@ -127,7 +127,7 @@ func main() {
 			fmt.Println("")
 		}
 	}
-    if (os.Args[3]!="") {
+	if (os.Args[3]!="") {
 		Resource_pattern = string(os.Args[3])
 	}
 	if (os.Args[4]!="") {
